@@ -1,0 +1,198 @@
+<?xml version="1.0"?>
+
+<robot name="phantomx_pincher" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- -|-|-|-|-|-|-|-|- ROBOT PROPERTIES AND CONSTANTS -|-|-|-|-|-|-|-|- -->
+
+<!-- Link length CAD-->
+<xacro:property name="l0" value="0.094375" />
+<xacro:property name="l1" value="0.0415" />
+<xacro:property name="l2" value="0.107" />
+<xacro:property name="l3" value="0.107" />
+<xacro:property name="l4" value="0.0905" /> <!-- Agarre efectivo Gripper  -->
+<xacro:property name="offset_finger" value="0.025" />
+
+<!-- Constants -->
+<xacro:property name="M_PI" value="3.14159"/>
+
+<!-- Materials -->
+<material name="Black">
+    <color rgba="0.22 0.22 0.22 1.0"/>
+</material>
+
+<!-- Mass and Inertia -->
+<xacro:property name="link_base_mass" value="0.131541100"/>
+<!-- <xacro:property name="link_base_origen_x" value="0"/>
+<xacro:property name="link_base_origen_y" value="0"/>
+<xacro:property name="link_base_origen_z" value="0"/> -->
+<xacro:property name="link_base_ixx" value="0.000212112"/>
+<xacro:property name="link_base_ixy" value="0.000000038"/>
+<xacro:property name="link_base_ixz" value="-0.000051900"/>
+<xacro:property name="link_base_iyy" value="0.000291337"/>
+<xacro:property name="link_base_iyz" value="-0.000000054"/>
+<xacro:property name="link_base_izz" value="0.000276625"/>
+
+<xacro:property name="link_1_mass" value="0.046266180"/>
+<xacro:property name="link_1_ixx" value="0.000014303"/>
+<xacro:property name="link_1_ixy" value="-0.000000001"/>
+<xacro:property name="link_1_ixz" value="0.000000010"/>
+<xacro:property name="link_1_iyy" value="0.000012129"/>
+<xacro:property name="link_1_iyz" value="-0.000000150"/>
+<xacro:property name="link_1_izz" value="0.000007453"/>
+
+<xacro:property name="link_2_mass" value="0.063502600"/>
+<xacro:property name="link_2_ixx" value="0.000048752"/>
+<xacro:property name="link_2_ixy" value="-0.000000001"/>
+<xacro:property name="link_2_ixz" value="-0.000000008"/>
+<xacro:property name="link_2_iyy" value="0.000043805"/>
+<xacro:property name="link_2_iyz" value="-0.000000528"/>
+<xacro:property name="link_2_izz" value="0.000012251"/>
+
+<xacro:property name="link_3_mass" value="0.063502600"/>
+<xacro:property name="link_3_ixx" value="0.000048752"/>
+<xacro:property name="link_3_ixy" value="-0.000000001"/>
+<xacro:property name="link_3_ixz" value="-0.000000008"/>
+<xacro:property name="link_3_iyy" value="0.000043805"/>
+<xacro:property name="link_3_iyz" value="-0.000000528"/>
+<xacro:property name="link_3_izz" value="0.000012251"/>
+
+<xacro:property name="link_4_mass" value="0.063049010"/>
+<xacro:property name="link_4_ixx" value="0.000022624"/>
+<xacro:property name="link_4_ixy" value="0.000000016"/>
+<xacro:property name="link_4_ixz" value="0.000000924"/>
+<xacro:property name="link_4_iyy" value="0.000027037"/>
+<xacro:property name="link_4_iyz" value="-0.000000005"/>
+<xacro:property name="link_4_izz" value="0.000021160"/>
+
+<xacro:property name="finger_mass" value="0.006803850"/>
+<xacro:property name="finger_ixx" value="0.000001127"/>
+<xacro:property name="finger_ixy" value="0.000000000"/>
+<xacro:property name="finger_ixz" value="0.000000000"/>
+<xacro:property name="finger_iyy" value="0.000001776"/>
+<xacro:property name="finger_iyz" value="-0.000000278"/>
+<xacro:property name="finger_izz" value="0.000001162"/>
+
+<!-- Joint-Servomotor limits -150,150 deg -->
+<xacro:property name="joint_lower" value="-2.61799" />
+<xacro:property name="joint_upper" value="2.61799" />
+
+<!-- Gripper Joint limits  -->
+<xacro:property name="joint_gripper_limit" value="0.01" />
+
+<!-- -|-|-|-|-|-|-|-|- MACROS -|-|-|-|-|-|-|-|- -->
+
+<!-- Joint-Servomotor Macro -->
+<xacro:macro 
+name="joint_phantomx" 
+params="name type parent child origin_rpy 
+        origin_xyz axis_xyz limit_e limit_l limit_u limit_v">
+
+    <joint name="${name}" type="${type}">
+
+        <parent link="${parent}" />
+        <child link="${child}" />        
+        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <axis xyz="${axis_xyz}" />
+        <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
+    
+    </joint>
+
+    <transmission name="transmission_${name}">
+
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="${name}">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor_${name}">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+
+    </transmission>
+
+</xacro:macro>
+
+
+<!-- Gripper-Joint Macro -->
+<xacro:macro 
+name="joint_gripper_phantomx" 
+params="name type parent child origin_rpy origin_xyz 
+        axis_xyz limit_e limit_l limit_u limit_v mimic_joint m_multiplier m_offset">
+
+    <joint name="${name}" type="${type}">
+
+        <parent link="${parent}" />
+        <child link="${child}" />
+        <origin rpy="${origin_rpy}" xyz="${origin_xyz}"/>
+        <axis xyz="${axis_xyz}" />
+        <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
+
+    </joint>
+
+    <transmission name="trans_${name}">
+
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="${name}">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor_${name}">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+
+    </transmission>
+
+</xacro:macro>
+
+<!-- Link Macro -->
+<xacro:macro 
+name="link_phantomx" 
+params="name origin_rpy origin_xyz meshfile mass ixx ixy ixz iyy iyz izz">
+
+    <link name="${name}">
+
+        <visual>
+            <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+            <geometry>
+                <mesh filename="${meshfile}"/>
+            </geometry>
+            <material name="Black"/>
+        </visual> 
+       
+        <inertial>
+            <mass value="${mass}" />
+            <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+            <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}" />
+        </inertial>
+
+        <collision>
+            <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+            <geometry>
+                <mesh filename="${meshfile}"/>
+            </geometry>
+        </collision>
+
+    </link>
+
+</xacro:macro>
+
+
+<!-- Tool Frame Macro -->
+
+<!-- <xacro:macro name="create_noa" params="name origin_rpy origin_xyz parent">-->
+<!--  <link name="${name}">-->
+<!--    <visual>-->
+<!--        <origin rpy="0 0 0" xyz="0 0 0"/>-->
+<!--    </visual>-->
+<!--  </link>-->
+<!--  <joint name="Tool_${name}" type="fixed">-->
+<!--    <origin rpy="${origin_rpy}" xyz="${origin_xyz}"/>-->
+<!--    <parent link="${parent}"/>-->
+<!--    <child link="${name}"/>-->
+<!--  </joint>-->
+<!-- </xacro:macro>-->
+
+
+</robot>
+
+
