@@ -1,0 +1,20 @@
+<launch>
+
+    <arg name="gui" default="true" />
+    <arg name="rvizconfig" default="$(find phantomx_pincher)/config/rviz_config.rviz" />
+
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find phantomx_pincher)/urdf/phantomx_description.xacro'"/>
+
+    <param name="use_gui" value="True"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+        <param name="use_gui" value="True"/>
+	<rosparam param="source_list">["phantomx_pincher/topics/joint_states"]</rosparam>
+    </node>
+
+</launch>
+
+

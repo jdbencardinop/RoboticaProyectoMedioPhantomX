@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+
+<robot name="phantomx_pincher" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- -|-|-|-|-|-|-|-|- INCLUDE -|-|-|-|-|-|-|-|- -->
+
+<xacro:include filename="$(find phantomx_pincher)/urdf/phantomx_parameters.xacro" />
+
+<!-- -|-|-|-|-|-|-|-|- ROBOT DESCRIPTION -|-|-|-|-|-|-|-|- -->
+
+<!-- Gazebo World link -->
+<link name="world"/>  
+<joint name="fixed" type="fixed">
+    <parent link="world"/>
+    <child link="link_base"/>
+</joint>
+
+<!-- Base Link -->
+<link_phantomx 
+    name="link_base"
+    origin_rpy="0 0 0" 
+    origin_xyz="0 0 0"
+    meshfile="package://phantomx_pincher/meshes/link_base.dae"
+    mass="${link_base_mass}"
+    ixx="${link_base_ixx}" ixy="${link_base_ixy}" ixz="${link_base_ixz}"
+    iyy="${link_base_iyy}" iyz="${link_base_iyz}" izz="${link_base_izz}"	
+/>  
+
+<!-- Joint-Servomotor 1 -->
+<joint_phantomx
+    name="joint_1" 
+    type="revolute"
+    parent="link_base" 
+    child="link_1"
+    origin_rpy="0 0 0" 
+    origin_xyz="0 0 ${l0}"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="${joint_lower}" limit_u="${joint_upper}" limit_v="0.5" 
+/>
+
+<!-- Link 1 -->
+<link_phantomx
+    name="link_1"
+    origin_rpy="0 0 0" 
+    origin_xyz="0 0 0"
+    meshfile="package://phantomx_pincher/meshes/link_1.dae"
+    mass="${link_1_mass}"
+    ixx="${link_1_ixx}" ixy="${link_1_ixy}" ixz="${link_1_ixz}"
+    iyy="${link_1_iyy}" iyz="${link_1_iyz}" izz="${link_1_izz}"	
+/>  
+
+
+<!-- Joint-Servomotor 2 -->
+<joint_phantomx
+    name="joint_2" 
+    type="revolute"
+    parent="link_1" 
+    child="link_2"
+    origin_rpy="-${M_PI/2} -${M_PI/2} 0" 
+    origin_xyz="0 0 ${l1}"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="${joint_lower}" limit_u="${joint_upper}" limit_v="0.5" 
+/>
+
+<!-- Link 2 -->
+<link_phantomx
+    name="link_2"
+    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
+    origin_xyz="0 0 0"
+    meshfile="package://phantomx_pincher/meshes/link_2.dae"
+    mass="${link_2_mass}"
+    ixx="${link_2_ixx}" ixy="${link_2_ixy}" ixz="${link_2_ixz}"
+    iyy="${link_2_iyy}" iyz="${link_2_iyz}" izz="${link_2_izz}"	
+/>  
+
+<!-- Joint-Servomotor 3 -->
+<joint_phantomx
+    name="joint_3" 
+    type="revolute"
+    parent="link_2" 
+    child="link_3"
+    origin_rpy="0 0 0" 
+    origin_xyz="${l2} 0 0"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="${joint_lower}" limit_u="${joint_upper}" limit_v="0.5" 
+/>
+
+<!-- Link 3 -->
+<link_phantomx
+    name="link_3"
+    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
+    origin_xyz="0 0 0"
+    meshfile="package://phantomx_pincher/meshes/link_3.dae"
+    mass="${link_3_mass}"
+    ixx="${link_3_ixx}" ixy="${link_3_ixy}" ixz="${link_3_ixz}"
+    iyy="${link_3_iyy}" iyz="${link_3_iyz}" izz="${link_3_izz}"	
+/>  
+
+<!-- Joint-Servomotor 4 -->
+<joint_phantomx
+    name="joint_4" 
+    type="revolute"
+    parent="link_3" 
+    child="link_4"
+    origin_rpy="0 0 0" 
+    origin_xyz="${l3} 0 0"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="${joint_lower}" limit_u="${joint_upper}" limit_v="0.5" 
+/>
+
+<!-- Link 4 -->
+<link_phantomx
+    name="link_4"
+    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
+    origin_xyz="0 0 0"
+    meshfile="package://phantomx_pincher/meshes/link_4.dae"
+    mass="${link_4_mass}"
+    ixx="${link_4_ixx}" ixy="${link_4_ixy}" ixz="${link_4_ixz}"
+    iyy="${link_4_iyy}" iyz="${link_4_iyz}" izz="${link_4_izz}"	
+/>  
+
+<!-- Gripper Description -->
+
+<!-- Joint-Servomotor-Gripper 1 -->
+<joint_phantomx
+    name="joint_finger_1" 
+    type="prismatic"
+    parent="link_4" 
+    child="link_finger_1"
+    origin_rpy="0 0 0" 
+    origin_xyz="${l4} 0 -${offset_finger}"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.01" 
+/>
+
+<!-- Joint-Servomotor-Gripper 2 -->
+<joint_gripper_phantomx 
+    name="joint_finger_2" 
+    type="prismatic"
+    parent="link_4"
+    child="link_finger_2"
+    origin_rpy="${M_PI} 0 0" 
+    origin_xyz="${l4} 0 ${offset_finger}"
+    axis_xyz="0 0 1"
+    limit_e="100" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.01" 
+    m_multiplier="1" m_offset="0" 
+    mimic_joint="joint_finger1" 
+/>
+
+<!-- Link-Gripper Finger 1 -->
+<link_phantomx
+    name="link_finger_1"
+    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
+    origin_xyz="-0.019 0 0"
+    meshfile="package://phantomx_pincher/meshes/finger.dae"
+    mass="${finger_mass}"
+    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"
+    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	
+/> 
+
+<!-- Link-Gripper Finger 2 -->
+<link_phantomx
+    name="link_finger_2"
+    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
+    origin_xyz="-0.019 0 0"
+    meshfile="package://phantomx_pincher/meshes/finger.dae"
+    mass="${finger_mass}"
+    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"
+    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	
+/> 
+
+<!-- Tool Description -->
+
+<!--<create_noa name="NOA"-->
+<!--    origin_xyz="20 0 0"-->
+<!--    origin_rpy="-1.57 0 -1.57" -->
+<!--    parent="${link_02_name}"-->
+<!--  />-->
+
+<!-- -|-|-|-|-|-|-|-|- GAZEBO PLUGIN -|-|-|-|-|-|-|-|- -->
+
+<gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/phantomx_pincher</robotNamespace>
+    </plugin>
+</gazebo>
+
+</robot>

@@ -1,0 +1,62 @@
+<launch>
+
+    <!-- -|-|-|-|-|-|-|-|- ARGUMENTS -|-|-|-|-|-|-|-|- -->
+
+    <!-- Xacro and Control paths-->
+    <arg name="xacro_file" default="phantomx_description.xacro"/>
+    <arg name="control_file" default="phantomx_control.yaml"/>
+    <!-- Origin XYZ-->
+    <arg name="x" default="0"/>
+    <arg name="y" default="0"/>
+    <arg name="z" default="0"/>
+
+    <!-- -|-|-|-|-|-|-|-|- SPAWNERS -|-|-|-|-|-|-|-|- -->
+
+    <!-- Launch Gazebo Empty World -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+
+    <param name="robot_description" 
+           command="$(find xacro)/xacro.py $(find phantomx_pincher)/urdf/$(arg xacro_file)"/>
+
+    <!-- Spawn Robot in Gazebo -->
+    <node 
+        name="urdf_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model"
+        args="-x $(arg x) 
+              -y $(arg y) 
+              -z $(arg z) 
+              -urdf
+              -model phantomx_pincher 
+              -param robot_description"
+    />
+
+    <!-- -|-|-|-|-|-|-|-|- CONTROLLER -|-|-|-|-|-|-|-|- -->
+
+    <!-- Load Arm Controllers Configuration -->
+    <rosparam file="$(find phantomx_pincher)/config/$(arg control_file)" command="load"/>
+
+    <node 
+        name="controller_spawner" 
+        pkg="controller_manager" 
+        type="spawner" 
+        respawn="false" 
+        output="screen" 
+        ns="/phantomx_pincher" 
+        args="joint_state_controller
+              joint_1_position_controller
+              joint_2_position_controller
+              joint_3_position_controller
+              joint_4_position_controller
+              joint_finger_1_position_controller
+              joint_finger_2_position_controller"
+    />
+
+    <!-- -|-|-|-|-|-|-|-|- RQT -|-|-|-|-|-|-|-|- -->
+    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />
+    <node name="rqt_publisher" pkg="rqt_publisher" type="rqt_publisher" />
+
+  
+
+
+</launch>
