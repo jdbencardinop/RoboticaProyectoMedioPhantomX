@@ -82,7 +82,6 @@ handles.pincher.base = transl(0,0,0);
 handles.T0 = handles.pincher.fkine([0 0 0 0]); 
 handles.T04 = handles.pincher.fkine(handles.q0);
 handles.T4T = rt2tr(rotz(-90,'deg')*rotx(-90,'deg'),[handles.l(4) 0 0]');%Herramienta respecto al marco 4
-
 handles.pincher.tool = handles.T4T;
 
 handles.T0T = handles.T04*handles.T4T; %Herramienta respecto a base
@@ -216,7 +215,7 @@ end
 %Funciones
 function T = sequenceMaker(angle)
     
-radio = 0.022;
+radio = 0.22;
 altura_recogida = 0.035;
 altura_traslacion = 0.13;
 % Orientaciones
@@ -240,10 +239,10 @@ function poseSequence(pincher, T, l)
     
     for i=1:6
         
-        Qobj = inverseX((T(4*i-3:4*i,:)),l)
+        Qobj = inverseX((T(4*i-3:4*i,:)),l);
         %moveAllJoints(Qobj)
         pincher.plot(Qobj)
-        pause(1/100)
+        pause(5)
         if i==2 
             gripper = 0.01; % metros
             %moveGripper(gripper)  
@@ -258,9 +257,9 @@ function poseSequence(pincher, T, l)
     end
 
 function qcodoarriba = inverseX(T,dims)
-    wx = T(1,4) - dims(4)*T(1,1);
-    wy = T(2,4) - dims(4)*T(2,1);
-    wz = T(3,4) - dims(4)*T(3,1);
+    wx = T(1,4) - dims(4)*T(1,3);
+    wy = T(2,4) - dims(4)*T(2,3);
+    wz = T(3,4) - dims(4)*T(3,3);
     
     q(1,1) = atan2(wy,wx);
     q(2,1) = atan2(wy,wx);
@@ -272,11 +271,11 @@ function qcodoarriba = inverseX(T,dims)
         q(1,2) = pi/2 - q(1,2);
         q(2,2) = atan2(wz-dims(1),sqrt(wy^2 + wx^2)) + atan2(dims(3)*sin(q(2,3)),dims(2) + dims(3)*cos(q(2,3)));
         q(2,2) = pi/2 - q(2,2);
-        q(1,4) = atan2(-T(3,2),T(3,1)) - q(1,2) - q(1,3);
-        q(2,4) = atan2(-T(3,2),T(3,1)) - q(2,2) - q(2,3);
+        q(1,4) = atan2(T(3,1),T(3,3)) - q(1,2) - q(1,3);
+        q(2,4) = atan2(T(3,1),T(3,3)) - q(2,2) - q(2,3);
     end
-    qcodoarriba= q(1,:)
-    qcodoabajo = q(2,:)
+    qcodoarriba= q(1,:);
+    %qcodoabajo = q(2,:);
        
 
 function moveAllJoints(Q) % deg
