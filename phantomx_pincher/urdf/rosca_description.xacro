@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<robot name="rosca">
+
+<!-- Constants -->
+<property name="M_PI" value="3.14159"/>
+<property name="M_SCALE" value="0.01"/>
+
+<!-- Caja Link -->
+
+<link name="link_rosca">
+
+    <visual>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+    </visual> 
+
+    <inertial>
+        <mass value="0.008" />
+        <origin rpy="0 0 0" xyz="0 0 0.015" />
+        <inertia ixx="0.000001116" ixy="0" ixz="0" iyy="0.000001116" iyz="0" izz="0.000001049" />
+    </inertial>
+
+    <collision>
+        <origin rpy="0 0 0" xyz="0 0 0" />
+        <geometry>
+            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+    </collision>
+
+</link>
+
+<!-- -|-|-|-|-|-|-|-|- GAZEBO PLUGIN -|-|-|-|-|-|-|-|- -->
+
+<gazebo reference="link_rosca">
+    <material>Gazebo/Red</material>
+</gazebo>
+
+</robot>

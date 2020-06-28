@@ -3,11 +3,11 @@
     <!-- -|-|-|-|-|-|-|-|- ARGUMENTS -|-|-|-|-|-|-|-|- -->
 
     <!-- Xacro and Control paths-->
-    <arg name="robot_xacro" default="phantomx_description.xacro"/>
+    <arg name="robot_xacro" default="phantomx_description_inercias.xacro"/>
     <arg name="caja_xacro" default="caja_description.xacro"/>
     <arg name="rosca_xacro" default="rosca_description.xacro"/>
     <arg name="fixed_camera_xacro" default="fixed_camera.xacro"/>
-    <arg name="control_file" default="phantomx_control.yaml"/>
+    <arg name="control_file" default="phantomx_control_inercias.yaml"/>
     <!-- Origin XYZ-->
     <arg name="init_pose_robot" value="-x 0 -y 0 -z 0" />
     <arg name="radio" value="0.17" />
@@ -64,16 +64,16 @@
 
     <!-- Spawn Cajas in Gazebo -->
 
-<!--    <node -->
-<!--        name="caja_1_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_caja_1) -->
-<!--              -urdf-->
-<!--              -model caja_1 -->
-<!--              -param caja_description"-->
-<!--        output="screen"-->
-<!--    />-->
+    <node 
+        name="caja_1_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model"
+        args="$(arg init_pose_caja_1) 
+              -urdf
+              -model caja_1 
+              -param caja_description"
+        output="screen"
+    />
 
 <!--    <node -->
 <!--        name="caja_2_spawner" -->

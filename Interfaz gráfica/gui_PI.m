@@ -144,7 +144,7 @@ if(handles.ModoDeOperacion.Value == 2)
     guidata(hObject, handles);
 else
     handles = guidata(hObject);
-    display(handles.ModoDeOperacion.Value,'Modo MANUAL');
+    display(handles.ModoDeOperacion.Value,'Modo MANUAL');handles = guidata(hObject);
     joystick(hObject,handles);
     guidata(hObject, handles);
 end
@@ -235,35 +235,35 @@ if get(hObject,'Value') == 2
     try
         handles.operando = false;
         rosinit
-        
+%         pause(1)
         %Subscribers init
         
-        handles.joystick_sub = rossubscriber('/joy', @get_joystick_msg);
-        sub = rossubscriber('/phantomx_pincher/joint_states');
-
-        handles.r = rosrate(50); 
-        
-        %Publishsers init
-        handles.pubJoint1 = rospublisher('/phantomx_pincher/joint_1_position_controller/command');
-        handles.pubJoint2 = rospublisher('/phantomx_pincher/joint_2_position_controller/command');
-        handles.pubJoint3 = rospublisher('/phantomx_pincher/joint_3_position_controller/command');
-        handles.pubJoint4 = rospublisher('/phantomx_pincher/joint_4_position_controller/command');
-        handles.pubFinger1 = rospublisher('/phantomx_pincher/joint_finger_1_position_controller/command'); 
-        handles.pubFinger2 = rospublisher('/phantomx_pincher/joint_finger_2_position_controller/command'); 
-
-        %Messages init
-        handles.msgJoint1 = rosmessage(pubJoint1); 
-        handles.msgJoint2 = rosmessage(pubJoint2); 
-        handles.msgJoint3 = rosmessage(pubJoint3); 
-        handles.msgJoint4 = rosmessage(pubJoint4); 
-        handles.msgFinger1 = rosmessage(pubFinger1);
-        handles.msgFinger2 = rosmessage(pubFinger2);
         handles.roson = true;
     catch
         disp('Algo falló')
         rosshutdown
         handles.roson = false;
     end
+    handles.joystick_sub = rossubscriber('/joy');
+    handles.sub = rossubscriber('/phantomx_pincher/joint_states');
+
+    handles.r = rosrate(50); 
+
+    %Publishsers init
+    handles.pubJoint1 = rospublisher('/phantomx_pincher/joint_1_position_controller/command');
+    handles.pubJoint2 = rospublisher('/phantomx_pincher/joint_2_position_controller/command');
+    handles.pubJoint3 = rospublisher('/phantomx_pincher/joint_3_position_controller/command');
+    handles.pubJoint4 = rospublisher('/phantomx_pincher/joint_4_position_controller/command');
+    handles.pubFinger1 = rospublisher('/phantomx_pincher/joint_finger_1_position_controller/command'); 
+    handles.pubFinger2 = rospublisher('/phantomx_pincher/joint_finger_2_position_controller/command'); 
+
+    %Messages init
+    handles.msgJoint1 = rosmessage(handles.pubJoint1); 
+    handles.msgJoint2 = rosmessage(handles.pubJoint2); 
+    handles.msgJoint3 = rosmessage(handles.pubJoint3); 
+    handles.msgJoint4 = rosmessage(handles.pubJoint4); 
+    handles.msgFinger1 = rosmessage(handles.pubFinger1);
+    handles.msgFinger2 = rosmessage(handles.pubFinger2);
 else
     rosshutdown
     handles.roson = false;
@@ -322,12 +322,12 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
         if handles.roson
            if i==3 
                 gripper = 0.01; % metros
-                moveGripper(gripper); % para gripper
+                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
                 handles.GripperG.String = 'ON';
             end
             if i==6 
                 gripper = 0; % metros
-                moveGripper(gripper); % para gripper  
+                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
                 handles.GripperG.String = '';
             end 
         end
@@ -346,10 +346,15 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
             
             movePincher(pincher, Q(j,:), Taux, handles)
             if handles.roson
-               moveAllJoints(Q(j,:)); 
+               moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q(j,:));    
             end
             if handles.roson
-                joint_states = readJointStates(handles.sub);
+                try
+                    joint_states = readJointStates(handles.sub);
+                catch
+                    disp('No hay lectura')
+                    joint_states = Q(j,:);
+                end
             else
                 joint_states = Q(j,:);
             end
@@ -420,7 +425,7 @@ function moveGripper(pubFinger1,msgFinger1,pubFinger2,msgFinger2,distance) % deg
 
 
 function data = readJointStates(sub) % metros
-    data = deg2rad(sub.LatestMessage.Position);
+    data = sub.LatestMessage.Position;
 
 
 function movePincher(pincher, Q, ~, handles)
@@ -444,9 +449,9 @@ function updatetexts(joint_states, handles)
         handles.ZG.String = num2str(mat(3,4));
         handles.PitchG.String = rad2deg(sum(joint_states(2:4)));
 
-function get_joystick_msg(~, message)
-    global joystick_msg;
-    joystick_msg = message;
+% function get_joystick_msg(~, message)
+%     global joystick_msg;
+%     joystick_msg = message;
 
 function joystick(hObject,handles)
         
@@ -456,6 +461,7 @@ function joystick(hObject,handles)
     step_z = 0.01; % metros
     step_roll = deg2rad(10); % rad
     step_pitch = deg2rad(10); % rad
+    step_gripper = 0.002;
 
     % Home
     Q_home = handles.q0; %this may have to change to start at the last know position
@@ -478,16 +484,24 @@ function joystick(hObject,handles)
     pub_index = 0;
     pub_state = ["OFF", "ON"];
 
-    distante_index = 0;
-    distance_value = [0 0.01];
-    distance_state = ["Opened", "Closed"];
+    distance = 0;
+    gripper_closed = 0.015; % metros
+    gripper_opened = 0.0; % metros
     
     handles = guidata(hObject);
+    axes = zeros(8,1);
+    buttons = zeros(11,1);
     while handles.ModoDeOperacion.Value == 1 && handles.roson && handles.operando
         handles.Estado.String = 'prendido';
+        try
+            axes = handles.joystick_sub.LatestMessage.Axes;
+            buttons = handles.joystick_sub.LatestMessage.Buttons;    
+        catch
+            axes = axes;
+            buttons = buttons;
+            disp('No lectura Joystick')
+        end
         
-        axes = joystick_msg.Axes;
-        buttons = joystick_msg.Buttons;
 
         if buttons(2)==1 % Home position - B
             roll_aux = Q_home(1);
@@ -495,13 +509,6 @@ function joystick(hObject,handles)
             rho_act = t_home(1)/cos(roll_aux);
             z_act = t_home(3);
             disp('Home position')
-        elseif buttons(4)==1
-            pub_index = not(pub_index);
-            disp('Pub state: '+pub_state(pub_index+1))
-        elseif buttons(1)==1    
-            distante_index = not(distante_index);
-            disp('Dist state: '+distance_state(distante_index+1))
-            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance_value(distante_index+1));
         end
 
         if abs(axes(2)) > js_deadzone 
@@ -520,6 +527,21 @@ function joystick(hObject,handles)
             pitch_aux = pitch_aux - step_pitch*axes(5);
         end
 
+        % Gripper ----------------------------------
+        if buttons(5) == 1 % RB
+            distance = distance + step_gripper;
+            if distance >= gripper_closed
+                distance = gripper_closed;
+            end
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance);
+        elseif buttons(6) == 1 % LB
+            distance = distance - step_gripper;
+            if distance <= gripper_opened
+                distance = gripper_opened;
+            end
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance);
+        end
+        
         t_act(1) = rho_act*cos(roll_aux);
         t_act(2) = rho_act*sin(roll_aux);
         t_act(3) = z_act;
@@ -530,15 +552,13 @@ function joystick(hObject,handles)
         R_act = rpy2r(rpy_act,'zyx');
 
         T_new = double(rt2tr(R_act,t_act));
-        axes(handles.axes1)
-%         Q_act = handles.pincher.ikunc(T_new);
-        Q_act = inverseX(T_new,handles.l);
-        pincher.plot(Q_act,'noa','workspace', [-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
+%         axes(handles.axes1)
+        Q_act = handles.pincher.ikunc(T_new);
+%         Q_act = inverseX(T_new,handles.l);
+        handles.pincher.plot(Q_act,'noa','workspace', [-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
 
-        if pub_index==1 
-            moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q_act);    
-        end
-
+        moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q_act);    
+        
         [~,t_act] = tr2rt(handles.pincher.fkine(Q_act));
         roll_aux = Q_act(1);
         rho_act = t_act(1)/cos(roll_aux);
@@ -550,7 +570,7 @@ function joystick(hObject,handles)
         end
         
         guidata(hObject,handles);
-        waitfor(r);
+        waitfor(handles.r);
         handles = guidata(hObject);
     end
     %Finalizar el ciclo
