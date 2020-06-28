@@ -22,7 +22,7 @@ function varargout = gui_PI(varargin)
 
 % Edit the above text to modify the response to help gui_PI
 
-% Last Modified by GUIDE v2.5 28-Jun-2020 01:43:03
+% Last Modified by GUIDE v2.5 28-Jun-2020 13:10:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -166,6 +166,16 @@ handles.operando = false;
 guidata(hObject, handles);
 
 
+% --- Executes on button press in HomeG.
+function HomeG_Callback(hObject, eventdata, handles)
+
+handles.T = handles.T0T;
+poseSequence(handles.pincher, handles.T, handles.l, handles.qcur,1,handles, hObject);
+moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,0);
+guidata(hObject, handles);
+
+
+
 
 
 
@@ -204,14 +214,8 @@ elseif get(hObject,'Value') == 3
 else
     handles.angle = 90;
 end
-
-if get(hObject,'Value') == 3
-    handles.angle = 90;
-    handles.T = zeros(size(handles.T));
-else
     display(handles.angle, 'Hangle');
     handles.T = sequenceMaker(handles.angle);
-end
 guidata(hObject, handles);
 
 
@@ -242,15 +246,25 @@ if get(hObject,'Value') == 2 && ~handles.roson
     try
         handles.operando = false;
         %setenv('ROS_IP','25.74.14.134')
-        disp(handles.hostip)
-        setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
-        disp('http://'+ handles.hostip + ':11311')
+        %disp(handles.hostip)
+        %setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
+        %disp('http://'+ handles.hostip + ':11311')
+        rosshutdown
         rosinit
-%         pause(1)
 
-        %Subscribers init
+        
+        handles.roson = true;
+    catch
+        disp('Algo falló')
+        rosshutdown
+        handles.roson = false;
+    end
+    %handles.joystick_sub = rossubscriber('/joy');cle
+    %Subscribers init
         handles.sub = rossubscriber('/phantomx_pincher/joint_states');
-
+        handles.subscriber1_imageGrabber = rossubscriber('/camera_1/image_raw', @(~,message)processImage(message,handles.axes2));
+        handles.subscriber2_imageGrabber = rossubscriber('/camera_gripper/image_raw', @(~,message)processImage(message,handles.axes3));
+        
         handles.r = rosrate(50); 
 
         %Publishsers init
@@ -271,14 +285,7 @@ if get(hObject,'Value') == 2 && ~handles.roson
 
         %Go home
         moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,handles.qcur);    
-        
-        handles.roson = true;
-    catch
-        disp('Algo falló')
-        rosshutdown
-        handles.roson = false;
-    end
-    %handles.joystick_sub = rossubscriber('/joy');cle
+        moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,0);
     
 
 elseif get(hObject,'Value') == 3
@@ -287,12 +294,16 @@ elseif get(hObject,'Value') == 3
             handles = guidata(hObject);
             handles.operando = false;
             %setenv('ROS_IP','25.74.14.134')
-            setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
+            %setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
+            rosshutdown
             rosinit
             
             handles.joystick_sub = rossubscriber('/joy');
             handles.sub = rossubscriber('/phantomx_pincher/joint_states');
-
+            
+            handles.subscriber1_imageGrabber = rossubscriber('/camera_1/image_raw', @(~,message)processImage(message,handles.axes2));
+            handles.subscriber2_imageGrabber = rossubscriber('/camera_gripper/image_raw', @(~,message)processImage(message,handles.axes3));
+        
             handles.r = rosrate(50); 
 
             %Publishsers init
@@ -322,7 +333,7 @@ elseif get(hObject,'Value') == 3
         handles.joystick_sub = rossubscriber('/joy');
     end
     moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,handles.qcur);     
-    
+    moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,0);
 else
     rosshutdown
     handles.roson = false;
@@ -395,7 +406,8 @@ T = [T1;T2;T1;T3;T4;T3];
 function poseSequence(pincher, T, l, q0, init, handles, hObject) 
     q = q0;  %Posición inicial de la secuencia
     handles.Estado.String = 'prendido';
-    for i=init:6
+    gripper = 0;
+    for i=init:length(T)/4
         
         handles = guidata(hObject);
         if ~handles.operando
@@ -403,24 +415,25 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
         end
         
         %Casos para abrir o cerrar el gripper
+        
         if handles.roson
            if i==3 
-                gripper = 0.01; % metros
-                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
+                gripper = 0.012; % metros
                 handles.GripperG.String = 'ON';
             end
             if i==6 
                 gripper = 0; % metros
-                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
+                
                 handles.GripperG.String = '';
-            end 
+            end
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
         end
         
         %Casos de moviemiento convencional
         Taux = T(4*i-3:4*i,:);
         prev = q;
         q = inverseX(Taux,l);
-        [Q,~,~] = jtraj(prev, q, 20); % 20 puntos intermedios
+        [Q,~,~] = jtraj(prev, q, 10); % 20 puntos intermedios
         for j=1:size(Q,1) 
             handles = guidata(hObject);
             if ~handles.operando
@@ -430,7 +443,8 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
             
             movePincher(pincher, Q(j,:), Taux, handles)
             if handles.roson
-               moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q(j,:));    
+                moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q(j,:));    
+                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
             end
             if handles.roson
                 try
@@ -569,7 +583,7 @@ function joystick(hObject,handles)
     pub_state = ["OFF", "ON"];
 
     distance = 0;
-    gripper_closed = 0.012; % metros
+    gripper_closed = 0.01; % metros
     gripper_opened = 0.0; % metros
     
     handles = guidata(hObject);
@@ -668,7 +682,13 @@ function joystick(hObject,handles)
     end
     handles.Estado.String = 'apagado';
     guidata(hObject,handles);
-    
 
 
-
+function processImage(message,axespa)
+      A = readImage(message);
+      axes(axespa);
+      imshow(A);
+      %display(height,'altura')
+      %display(width, 'ancho')
+      %display(size(A),'tam')
+      %pause;
