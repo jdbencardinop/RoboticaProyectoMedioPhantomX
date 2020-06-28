@@ -201,17 +201,13 @@ elseif get(hObject,'Value') == 2
     handles.angle = -30;
 elseif get(hObject,'Value') == 3
     handles.angle = -90;
+elseif get(hObject,'Value') == 3
+    handles.angle = 0;
 else
     handles.angle = 90;
 end
-
-if get(hObject,'Value') == 3
-    handles.angle = 90;
-    handles.T = zeros(size(handles.T));
-else
-    display(handles.angle, 'Hangle');
-    handles.T = sequenceMaker(handles.angle);
-end
+display(handles.angle, 'Hangle');
+handles.T = sequenceMaker(handles.angle);
 guidata(hObject, handles);
 
 
@@ -242,9 +238,7 @@ if get(hObject,'Value') == 2 && ~handles.roson
     try
         handles.operando = false;
         %setenv('ROS_IP','25.74.14.134')
-        disp(handles.hostip)
         setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
-        disp('http://'+ handles.hostip + ':11311')
         rosinit
 %         pause(1)
 
@@ -284,7 +278,6 @@ if get(hObject,'Value') == 2 && ~handles.roson
 elseif get(hObject,'Value') == 3
     if ~handles.roson
         try
-            handles = guidata(hObject);
             handles.operando = false;
             %setenv('ROS_IP','25.74.14.134')
             setenv('ROS_MASTER_URI','http://'+ handles.hostip + ':11311')
@@ -351,9 +344,7 @@ function Canoxion_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Canoxion as text
 %        str2double(get(hObject,'String')) returns contents of Canoxion as a double
-handles = guidata(hObject);
-handles.hostip = get(hObject,'String');
-disp(handles.hostip)
+handles.rosip = get(hObject,'String');
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -569,7 +560,7 @@ function joystick(hObject,handles)
     pub_state = ["OFF", "ON"];
 
     distance = 0;
-    gripper_closed = 0.012; % metros
+    gripper_closed = 0.015; % metros
     gripper_opened = 0.0; % metros
     
     handles = guidata(hObject);
