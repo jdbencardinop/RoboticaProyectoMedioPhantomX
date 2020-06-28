@@ -144,7 +144,7 @@ if(handles.ModoDeOperacion.Value == 2)
     guidata(hObject, handles);
 else
     handles = guidata(hObject);
-    disp(handles.ModoDeOperacion.Value,'Modo MANUAL');
+    display(handles.ModoDeOperacion.Value,'Modo MANUAL');
     joystick(hObject,handles);
     guidata(hObject, handles);
 end
