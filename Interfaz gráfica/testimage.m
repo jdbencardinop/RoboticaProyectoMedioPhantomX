@@ -9,15 +9,9 @@ rosinit
 %%Create subscriber
 %% Suscribir
 subscriber_imageGrabber = rossubscriber('/rrbot/camera1/image_raw', @processImage);
-global imagen
 
 function processImage(~,message)
-      A = typecast(message.Data, 'uint8');
-      height = message.Height;
-      width = message.Width;
-      A = A';
-      A = reshape(A, [height width 3]);
-      imagen = A;
+      A = readImage(message);
       figure();
       imshow(A);
       display(height,'altura')

@@ -86,6 +86,7 @@ handles.pincher.tool = handles.T4T;
 
 handles.T0T = handles.T04*handles.T4T; %Herramienta respecto a base
 axes(handles.axes1)
+hold off
 handles.pincher.plot(handles.q0,'noa','workspace',[-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
 
 handles.Estado.String = 'apagado';
@@ -102,8 +103,10 @@ handles.YG.String = '0';
 handles.ZG.String = num2str(L0 + L1 + L2 +L3 + L4);
 handles.PitchG.String = '0';
 
-% handles.T = sequenceMaker(30);
-% poseSequence(handles.pincher, handles.T,handles.l)
+handles.roson = false;
+
+handles.angle = 30;
+handles.T = sequenceMaker(handles.angle);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -130,7 +133,9 @@ function Inicio_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if(handles.ModoDeOperacion.Value == 2)
-    poseSequence(handles.pincher, handles.T,handles.l)
+    display(handles.angle,'oprimido');
+    display(handles.T(21:24,:),'ultima');
+    poseSequence(handles.pincher, handles.T, handles.l, handles.q0,1,handles);
 end
 
     
@@ -184,9 +189,9 @@ elseif get(hObject,'Value') == 3
 else
     handles.angle = 90;
 end
-
 display(handles.angle, 'Hangle');
 handles.T = sequenceMaker(handles.angle);
+
 
 
 
@@ -211,6 +216,18 @@ function ROS_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns ROS contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from ROS
+if get(hObject,'Value') == 2
+    try
+        rosinit
+        handles.roson = true;
+    catch
+        rosshutdown
+        handles.roson = false;
+    end
+else
+    rosshutdown
+    handles.roson = false;
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -248,25 +265,42 @@ T = [T1;T2;T1;T3;T4;T3];
     
         
 %%
-function poseSequence(pincher, T, l)   
-    
-    for i=1:6
+function poseSequence(pincher, T, l, q0, init, handles)   
+    q = q0;  %Posición inicial de la secuencia
+    handles.Estado.String = 'prendido';
+    for i=init:6
+        %Casos para abrir o cerrar el gripper
+        if handles.roson
+           if i==3 
+                gripper = 0.01; % metros
+                moveGripper(gripper); % para gripper
+                handles.GripperG.String = 'ON';
+            end
+            if i==6 
+                gripper = 0; % metros
+                moveGripper(gripper); % para gripper  
+                handles.GripperG.String = '';
+            end 
+        end
         
-        Qobj = inverseX((T(4*i-3:4*i,:)),l);
-        %moveAllJoints(Qobj)
-        pincher.plot(Qobj)
-        pause(5)
-        if i==2 
-            gripper = 0.01; % metros
-            %moveGripper(gripper)  
-            
-        end
-        if i==5 
-            gripper = 0; % metros
-            %moveGripper(gripper)     
-        end
-        pause(1)   
-%         joint_states = readJointStates(sub)
+        %Casos de moviemiento convencional
+        Taux = T(4*i-3:4*i,:);
+        prev = q;
+        q = inverseX(Taux,l);
+        [Q,~,~] = jtraj(prev, q, 20); % 20 puntos intermedios
+        for j=1:size(Q,1)            
+            movePincher(pincher, Q(j,:), Taux, handles)
+            if handles.roson
+               moveAllJoints(Q(j,:)); 
+            end
+            if handles.roson
+                joint_states = readJointStates(sub);
+            else
+                joint_states = Q(j,:);
+            end
+            updatetexts(joint_states,handles);
+        end 
+        pause(0.1)  
     end
 
 function qcodoarriba = inverseX(T,dims)
@@ -303,8 +337,43 @@ function moveAllJoints(Q) % deg
     msgJoint = rosmessage(pubJoint); 
     msgJoint.Data = angle; 
     send(pubJoint,msgJoint);
+    pause(0.1)
+
+function movePincher(pincher, Q, T, handles)
+    axes(handles.axes1)
+    hold off
+    pincher.plot(Q,'noa','workspace',[-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
+%     hold on
+%     trplot(T,'length',0.1,'rgb');
+
+
+function moveGripper(distance) % metros
+    pubFinger1 = rospublisher('/phantomx_pincher/joint_finger_1_position_controller/command'); 
+    pubFinger2 = rospublisher('/phantomx_pincher/joint_finger_2_position_controller/command'); 
+    msgFinger1 = rosmessage(pubFinger1);  % Message
+    msgFinger2 = rosmessage(pubFinger2);  % Message
+    msgFinger1.Data = distance; 
+    msgFinger2.Data = distance; 
+    send(pubFinger1,msgFinger1);
+    send(pubFinger2,msgFinger2);
     pause(0.5)
 
+
+function data = readJointStates(sub) % metros
+    data = deg2rad(sub.LatestMessage.Position);
+
+function updatetexts(joint_states, handles)
+        handles.Q1g.String = num2str(rad2deg(joint_states(1)));
+        handles.Q2g.String = num2str(rad2deg(joint_states(2)));
+        handles.Q3g.String = num2str(rad2deg(joint_states(3)));
+        handles.Q4g.String = num2str(rad2deg(joint_states(4)));
+        
+        mat = handles.pincher.fkine(joint_states(1:4));
+        
+        handles.XG.String = num2str(mat(1,4));
+        handles.YG.String = num2str(mat(2,4));
+        handles.ZG.String = num2str(mat(3,4));
+        handles.PitchG.String = rad2deg(sum(joint_states(2:4)));
 
 
     
