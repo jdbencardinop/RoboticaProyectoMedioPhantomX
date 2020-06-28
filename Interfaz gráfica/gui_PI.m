@@ -102,9 +102,8 @@ handles.YG.String = '0';
 handles.ZG.String = num2str(L0 + L1 + L2 +L3 + L4);
 handles.PitchG.String = '0';
 
-handles.T = sequenceMaker(30);
-poseSequence(handles.pincher, handles.T,handles.l)
-
+% handles.T = sequenceMaker(30);
+% poseSequence(handles.pincher, handles.T,handles.l)
 
 % Update handles structure
 guidata(hObject, handles);
@@ -130,8 +129,9 @@ function Inicio_Callback(hObject, eventdata, handles)
 % hObject    handle to Inicio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global secuence_mode
-secuence_mode = handles.ModoDeOperacion.Value
+if(handles.ModoDeOperacion.Value == 2)
+    poseSequence(handles.pincher, handles.T,handles.l)
+end
 
     
 
@@ -151,6 +151,7 @@ waitfor(stop);
 
 % --- Executes on selection change in ModoDeOperacion.
 function ModoDeOperacion_Callback(hObject, eventdata, handles)
+%handles.ModoOp = handles.ModoDeOperacion.Value;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -174,6 +175,19 @@ function Trayectoria_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns Trayectoria contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Trayectoria
+if get(hObject,'Value') == 1
+    handles.angle = 30;
+elseif get(hObject,'Value') == 2
+    handles.angle = -30;
+elseif get(hObject,'Value') == 3
+    handles.angle = -90;
+else
+    handles.angle = 90;
+end
+
+display(handles.angle, 'Hangle');
+handles.T = sequenceMaker(handles.angle);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -228,14 +242,13 @@ T2 = Rini*transl(radio,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
 T3 = R*transl(radio,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
 T4 = R*transl(radio,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
 
-
+display(angle,'Interno');
 T = [T1;T2;T1;T3;T4;T3]; 
 
     
         
 %%
-function poseSequence(pincher, T, l)
-     
+function poseSequence(pincher, T, l)   
     
     for i=1:6
         
