@@ -70,6 +70,7 @@ q4 = 0;
 
 handles.l = [L0+L1 L2 L3 L4];
 handles.q0 = [q1 q2 q3 q4];
+handles.qcur = [q1 q2 q3 q4];
 
 handles.L(1) = Link('revolute','a',0,'alpha',0,'d',handles.l(1),'offset',0,'modified');
 handles.L(2) = Link('revolute','a',0,'alpha',-pi/2,'d',0,'offset',-pi/2,'modified');
@@ -104,13 +105,14 @@ handles.ZG.String = num2str(L0 + L1 + L2 +L3 + L4);
 handles.PitchG.String = '0';
 
 handles.roson = false;
+handles.operando = false;
 
 handles.angle = 30;
 handles.T = sequenceMaker(handles.angle);
 
+
 % Update handles structure
 guidata(hObject, handles);
-
 
 
 
@@ -132,11 +134,21 @@ function Inicio_Callback(hObject, eventdata, handles)
 % hObject    handle to Inicio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles.operando = true;
+guidata(hObject, handles);
 if(handles.ModoDeOperacion.Value == 2)
     display(handles.angle,'oprimido');
-    display(handles.T(21:24,:),'ultima');
-    poseSequence(handles.pincher, handles.T, handles.l, handles.q0,1,handles);
+    display(handles.T(21:24,:),'ultima');   
+    handles = guidata(hObject);
+    poseSequence(handles.pincher, handles.T, handles.l, handles.qcur,1,handles, hObject);
+    guidata(hObject, handles);
+else
+    handles = guidata(hObject);
+    disp(handles.ModoDeOperacion.Value,'Modo MANUAL');
+    joystick(hObject,handles);
+    guidata(hObject, handles);
 end
+
 
     
 
@@ -146,9 +158,11 @@ function Parada_Callback(hObject, eventdata, handles)
 % hObject    handle to Parada (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Inicio.Value = 0;
-stop = warndlg('Sistema Parado Presione Ok para Continuar','Warning');
-waitfor(stop);
+% handles.Inicio.Value = 0;
+%stop = warndlg('Sistema Parado Presione Ok para Continuar','Warning');
+%waitfor(stop);
+handles.operando = false;
+guidata(hObject, handles);
 
 
 
@@ -191,6 +205,7 @@ else
 end
 display(handles.angle, 'Hangle');
 handles.T = sequenceMaker(handles.angle);
+guidata(hObject, handles);
 
 
 
@@ -218,16 +233,43 @@ function ROS_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from ROS
 if get(hObject,'Value') == 2
     try
+        handles.operando = false;
         rosinit
+        
+        %Subscribers init
+        
+        handles.joystick_sub = rossubscriber('/joy', @get_joystick_msg);
+        sub = rossubscriber('/phantomx_pincher/joint_states');
+
+        handles.r = rosrate(50); 
+        
+        %Publishsers init
+        handles.pubJoint1 = rospublisher('/phantomx_pincher/joint_1_position_controller/command');
+        handles.pubJoint2 = rospublisher('/phantomx_pincher/joint_2_position_controller/command');
+        handles.pubJoint3 = rospublisher('/phantomx_pincher/joint_3_position_controller/command');
+        handles.pubJoint4 = rospublisher('/phantomx_pincher/joint_4_position_controller/command');
+        handles.pubFinger1 = rospublisher('/phantomx_pincher/joint_finger_1_position_controller/command'); 
+        handles.pubFinger2 = rospublisher('/phantomx_pincher/joint_finger_2_position_controller/command'); 
+
+        %Messages init
+        handles.msgJoint1 = rosmessage(pubJoint1); 
+        handles.msgJoint2 = rosmessage(pubJoint2); 
+        handles.msgJoint3 = rosmessage(pubJoint3); 
+        handles.msgJoint4 = rosmessage(pubJoint4); 
+        handles.msgFinger1 = rosmessage(pubFinger1);
+        handles.msgFinger2 = rosmessage(pubFinger2);
         handles.roson = true;
     catch
+        disp('Algo falló')
         rosshutdown
         handles.roson = false;
     end
 else
     rosshutdown
     handles.roson = false;
+    handles.operando = false;
 end
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -263,12 +305,19 @@ display(angle,'Interno');
 T = [T1;T2;T1;T3;T4;T3]; 
 
     
-        
-%%
-function poseSequence(pincher, T, l, q0, init, handles)   
+%% Funciones 
+
+%Función para el control automático del gripper
+function poseSequence(pincher, T, l, q0, init, handles, hObject) 
     q = q0;  %Posición inicial de la secuencia
     handles.Estado.String = 'prendido';
     for i=init:6
+        
+        handles = guidata(hObject);
+        if ~handles.operando
+            break
+        end
+        
         %Casos para abrir o cerrar el gripper
         if handles.roson
            if i==3 
@@ -288,20 +337,45 @@ function poseSequence(pincher, T, l, q0, init, handles)
         prev = q;
         q = inverseX(Taux,l);
         [Q,~,~] = jtraj(prev, q, 20); % 20 puntos intermedios
-        for j=1:size(Q,1)            
+        for j=1:size(Q,1) 
+            handles = guidata(hObject);
+            if ~handles.operando
+                q = Q(j,:);
+                break
+            end
+            
             movePincher(pincher, Q(j,:), Taux, handles)
             if handles.roson
                moveAllJoints(Q(j,:)); 
             end
             if handles.roson
-                joint_states = readJointStates(sub);
+                joint_states = readJointStates(handles.sub);
             else
                 joint_states = Q(j,:);
             end
             updatetexts(joint_states,handles);
         end 
+        
+        handles = guidata(hObject);
+        if ~handles.operando
+            break
+        end
+        
         pause(0.1)  
     end
+    %Acabar el ciclo
+    handles = guidata(hObject);
+    if ~handles.operando
+        handles.qcur = q;
+        display(handles.qcur,'Parado!');
+        handles.Estado.String = 'apagado';
+    else
+        %Posición de arranque siguiente ciclo
+        % Por defecto está en home
+        handles.qcur = handles.q0;
+    end
+    handles.Estado.String = 'apagado';
+    guidata(hObject,handles);
 
 function qcodoarriba = inverseX(T,dims)
     wx = T(1,4) - dims(4)*T(1,3);
@@ -324,43 +398,38 @@ function qcodoarriba = inverseX(T,dims)
     qcodoarriba= q(1,:);
     %qcodoabajo = q(2,:);
        
+function moveAllJoints(pubJoint1,msgJoint1,pubJoint2,msgJoint2,pubJoint3,msgJoint3,pubJoint4,msgJoint4,Q) % deg
+    moveJoint(pubJoint3,msgJoint3,Q(3))
+    moveJoint(pubJoint2,msgJoint2,Q(2))
+    moveJoint(pubJoint4,msgJoint4,Q(4))
+    moveJoint(pubJoint1,msgJoint1,Q(1))
 
-function moveAllJoints(Q) % deg
-    moveJoint(3,Q(3))
-    moveJoint(2,Q(2))
-    moveJoint(4,Q(4))
-    moveJoint(1,Q(1))
-    
- function moveJoint(joint_num, angle) % deg
-    topic_name = sprintf('/phantomx_pincher/joint_%d_position_controller/command',joint_num);
-    pubJoint = rospublisher(topic_name); 
-    msgJoint = rosmessage(pubJoint); 
+
+function moveJoint(pubJoint,msgJoint,angle) % deg
     msgJoint.Data = angle; 
     send(pubJoint,msgJoint);
-    pause(0.1)
+%     pause(1/100)
 
-function movePincher(pincher, Q, T, handles)
+
+function moveGripper(pubFinger1,msgFinger1,pubFinger2,msgFinger2,distance) % deg
+    msgFinger1.Data = distance; 
+    msgFinger2.Data = distance; 
+    send(pubFinger1,msgFinger1);
+    send(pubFinger2,msgFinger2);
+%     pause(1/100)
+
+
+function data = readJointStates(sub) % metros
+    data = deg2rad(sub.LatestMessage.Position);
+
+
+function movePincher(pincher, Q, ~, handles)
     axes(handles.axes1)
     hold off
     pincher.plot(Q,'noa','workspace',[-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
 %     hold on
 %     trplot(T,'length',0.1,'rgb');
 
-
-function moveGripper(distance) % metros
-    pubFinger1 = rospublisher('/phantomx_pincher/joint_finger_1_position_controller/command'); 
-    pubFinger2 = rospublisher('/phantomx_pincher/joint_finger_2_position_controller/command'); 
-    msgFinger1 = rosmessage(pubFinger1);  % Message
-    msgFinger2 = rosmessage(pubFinger2);  % Message
-    msgFinger1.Data = distance; 
-    msgFinger2.Data = distance; 
-    send(pubFinger1,msgFinger1);
-    send(pubFinger2,msgFinger2);
-    pause(0.5)
-
-
-function data = readJointStates(sub) % metros
-    data = deg2rad(sub.LatestMessage.Position);
 
 function updatetexts(joint_states, handles)
         handles.Q1g.String = num2str(rad2deg(joint_states(1)));
@@ -375,6 +444,124 @@ function updatetexts(joint_states, handles)
         handles.ZG.String = num2str(mat(3,4));
         handles.PitchG.String = rad2deg(sum(joint_states(2:4)));
 
+function get_joystick_msg(~, message)
+    global joystick_msg;
+    joystick_msg = message;
 
+function joystick(hObject,handles)
+        
+    js_deadzone = 0.3;
+
+    step_rho = 0.01; % metros
+    step_z = 0.01; % metros
+    step_roll = deg2rad(10); % rad
+    step_pitch = deg2rad(10); % rad
+
+    % Home
+    Q_home = handles.q0; %this may have to change to start at the last know position
+    [R_home,t_home] = tr2rt(handles.T0T);
+    rpy_home = tr2rpy(R_home, 'zyx'); % rad
+
+    % Act
+    Q_act = handles.qcur;
+%     t_act = t_home;
+    [R_act, t_act] = tr2rt(handles.pincher.fkine(Q_act));
+    rpy_act = tr2rpy(R_act, 'zyx'); % rad
+
+%     roll_aux = Q_home(1); % rad
+%     pitch_aux = Q_home(4); % rad
+    roll_aux = Q_act(1); % rad
+    pitch_aux = Q_act(4); % rad
+    rho_act = t_home(1)/cos(roll_aux); % metros
+    z_act = t_home(3); % metros
+
+    pub_index = 0;
+    pub_state = ["OFF", "ON"];
+
+    distante_index = 0;
+    distance_value = [0 0.01];
+    distance_state = ["Opened", "Closed"];
     
+    handles = guidata(hObject);
+    while handles.ModoDeOperacion.Value == 1 && handles.roson && handles.operando
+        handles.Estado.String = 'prendido';
+        
+        axes = joystick_msg.Axes;
+        buttons = joystick_msg.Buttons;
+
+        if buttons(2)==1 % Home position - B
+            roll_aux = Q_home(1);
+            pitch_aux = Q_home(4);
+            rho_act = t_home(1)/cos(roll_aux);
+            z_act = t_home(3);
+            disp('Home position')
+        elseif buttons(4)==1
+            pub_index = not(pub_index);
+            disp('Pub state: '+pub_state(pub_index+1))
+        elseif buttons(1)==1    
+            distante_index = not(distante_index);
+            disp('Dist state: '+distance_state(distante_index+1))
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance_value(distante_index+1));
+        end
+
+        if abs(axes(2)) > js_deadzone 
+            z_act = z_act + step_z*axes(2);
+        end
+
+        if axes(6) < 0 
+            rho_act = rho_act - step_rho*axes(6);    
+        elseif axes(3) < 0 
+            rho_act = rho_act + step_rho*axes(3);    
+        end
+
+        if abs(axes(4)) > js_deadzone 
+            roll_aux = roll_aux + step_roll*axes(4);
+        elseif abs(axes(5)) > js_deadzone 
+            pitch_aux = pitch_aux - step_pitch*axes(5);
+        end
+
+        t_act(1) = rho_act*cos(roll_aux);
+        t_act(2) = rho_act*sin(roll_aux);
+        t_act(3) = z_act;
+
+        rpy_act(1) = rpy_home(1)+roll_aux;
+        rpy_act(2) = rpy_home(2)+pitch_aux;
+        rpy_act(3) = rpy_home(3);
+        R_act = rpy2r(rpy_act,'zyx');
+
+        T_new = double(rt2tr(R_act,t_act));
+        axes(handles.axes1)
+%         Q_act = handles.pincher.ikunc(T_new);
+        Q_act = inverseX(T_new,handles.l);
+        pincher.plot(Q_act,'noa','workspace', [-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
+
+        if pub_index==1 
+            moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q_act);    
+        end
+
+        [~,t_act] = tr2rt(handles.pincher.fkine(Q_act));
+        roll_aux = Q_act(1);
+        rho_act = t_act(1)/cos(roll_aux);
+        z_act = t_act(3);
+        
+        handles = guidata(hObject);
+        if ~handles.operando
+            break
+        end
+        
+        guidata(hObject,handles);
+        waitfor(r);
+        handles = guidata(hObject);
+    end
+    %Finalizar el ciclo
+    if ~handles.operando
+        handles.qcur = Q_act;
+        handles.Estado.String = 'apagado';
+    else
+        %Posición de arranque siguiente ciclo
+        % Por defecto está en home
+        handles.qcur = handles.q0;
+    end
+    handles.Estado.String = 'apagado';
+    guidata(hObject,handles);
     
