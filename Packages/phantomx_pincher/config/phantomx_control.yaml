@@ -1,0 +1,67 @@
+#phantomx_pincher:
+#  # Publish all joint states -----------------------------------
+#  joint_state_controller:
+#    type: joint_state_controller/JointStateController
+#    publish_rate: 50.0  
+#  
+#  # Position Controllers ---------------------------------------
+#  joint_1_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_1
+#    pid: {p: 120, i: 0, d: 80}
+#  joint_2_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_2
+#    pid: {p: 120, i: 0, d: 80}
+#  joint_3_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_3
+#    pid: {p: 120, i: 0, d: 80}
+#  joint_4_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_4
+#    pid: {p: 120, i: 0, d: 80}
+#  joint_finger_1_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_finger_1
+#    pid: {p: 120, i: 0, d: 30}
+#  joint_finger_2_position_controller:
+#    type: effort_controllers/JointPositionController
+#    joint: joint_finger_2
+#    pid: {p: 120, i: 0, d: 30}
+
+# 
+
+phantomx_pincher:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50.0  
+  
+  # Position Controllers ---------------------------------------
+  joint_1_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_1
+    pid: {p: 100, i: 0, d: 60}
+  joint_2_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_2
+    pid: {p: 100, i: 0, d: 60}
+  joint_3_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_3
+    pid: {p: 100, i: 0, d: 60}
+  joint_4_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_4
+    pid: {p: 100, i: 0, d: 60}
+  joint_finger_1_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_finger_1
+    pid: {p: 100, i: 0, d: 10}
+  joint_finger_2_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: joint_finger_2
+    pid: {p: 100, i: 0, d: 10}
+
+ 

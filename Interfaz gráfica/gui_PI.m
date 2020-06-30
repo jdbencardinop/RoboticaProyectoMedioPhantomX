@@ -208,9 +208,9 @@ function Trayectoria_Callback(hObject, eventdata, handles)
 if get(hObject,'Value') == 1
     handles.angle = 30;
 elseif get(hObject,'Value') == 2
-    handles.angle = -30;
+    handles.angle = 0;
 elseif get(hObject,'Value') == 3
-    handles.angle = -90;
+    handles.angle = -30;
 else
     handles.angle = 90;
 end
@@ -265,7 +265,7 @@ if get(hObject,'Value') == 2 && ~handles.roson
         handles.subscriber1_imageGrabber = rossubscriber('/camera_1/image_raw', @(~,message)processImage(message,handles.axes2));
         handles.subscriber2_imageGrabber = rossubscriber('/camera_gripper/image_raw', @(~,message)processImage(message,handles.axes3));
         
-        handles.r = rosrate(50); 
+        handles.r = rosrate(10); 
 
         %Publishsers init
         handles.pubJoint1 = rospublisher('/phantomx_pincher/joint_1_position_controller/command');
@@ -383,21 +383,48 @@ end
 %Funciones
 function T = sequenceMaker(angle)
     
-radio = 0.22;
-altura_recogida = 0.035;
-altura_traslacion = 0.13;
+% radio = 0.22;
+%recogida
+radio_aprox_recogida = 0.18;
+radio_recogida = 0.22;
+altura_recogida = 0.0225; % que tan abajo para recogida
+altura_traslacion = 0.1441; % que tanto sube para traslacion
+altura_llegada = 0.0669; % que tanto baja para llegada
+radio_llegada = 0.222;
+
 % Orientaciones
 Rini = trotz(90, 'deg');
 R = trotz(angle, 'deg');
 
-%    transl( X0', 'Y0' , Z0' en metros )*R_left;
-T1 = Rini*transl(radio,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
-T2 = Rini*transl(radio,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
-T3 = R*transl(radio,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
-T4 = R*transl(radio,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
+% %    transl( X0', 'Y0' , Z0' en metros )*R_left;
+% % aproximacion-recogida
+% T1 = Rini*transl(radio_aprox_recogida,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
+% % recogida
+% T2 = Rini*transl(radio_recogida,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
+% % aproximacion-llegada
+% T3 = R*transl(radio_llegada,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
+% % llegada
+% T4 = R*transl(radio_llegada,0,altura_llegada)*troty(90,'deg')*trotz(180,'deg');
+% 
+% display(angle,'Interno');
+% T = [T1;T2;T1;T3;T4;T3]; 
+
+
+% aproximacion-arriba-recogida
+T1 = Rini*transl(radio_aprox_recogida,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
+% aproximacion-abajo-recogida
+T2 = Rini*transl(radio_aprox_recogida,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
+% recogida
+T3 = Rini*transl(radio_recogida,0,altura_recogida)*troty(90,'deg')*trotz(180,'deg');
+% elevacion-recogida
+T4 = Rini*transl(radio_recogida,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
+% aproximacion-llegada
+T5 = R*transl(radio_llegada,0,altura_traslacion)*troty(90,'deg')*trotz(180,'deg');
+% llegada
+T6 = R*transl(radio_llegada,0,altura_llegada)*troty(90,'deg')*trotz(180,'deg');
 
 display(angle,'Interno');
-T = [T1;T2;T1;T3;T4;T3]; 
+T = [T1;T2;T3;T4;T5;T6;T5]; 
 
 
 
@@ -417,23 +444,28 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
         %Casos para abrir o cerrar el gripper
         
         if handles.roson
-           if i==3 
-                gripper = 0.012; % metros
+            if i==4 
+                pause(1)
+                gripper = 0.01; % metros
                 handles.GripperG.String = 'ON';
+                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
+                pause(1)
             end
-            if i==6 
+            if i==7 
+                pause(1)
                 gripper = 0; % metros
-                
                 handles.GripperG.String = '';
+                moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
+                pause(1)
             end
-            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper);
+            
         end
         
         %Casos de moviemiento convencional
         Taux = T(4*i-3:4*i,:);
         prev = q;
         q = inverseX(Taux,l);
-        [Q,~,~] = jtraj(prev, q, 10); % 20 puntos intermedios
+        [Q,~,~] = jtraj(prev, q, 20); % 20 puntos intermedios
         for j=1:size(Q,1) 
             handles = guidata(hObject);
             if ~handles.operando
@@ -464,7 +496,7 @@ function poseSequence(pincher, T, l, q0, init, handles, hObject)
             break
         end
         
-        pause(0.1)  
+        pause(1)  
     end
     %Acabar el ciclo
     handles = guidata(hObject);
@@ -559,8 +591,7 @@ function joystick(hObject,handles)
     step_z = 0.01; % metros
     step_roll = deg2rad(10); % rad
     step_pitch = deg2rad(10); % rad
-    step_gripper = 0.002;
-
+    
     % Home
     Q_home = handles.q0; %this may have to change to start at the last know position
     [R_home,t_home] = tr2rt(handles.T0T);
@@ -579,16 +610,14 @@ function joystick(hObject,handles)
     rho_act = t_home(1)/cos(roll_aux); % metros
     z_act = t_home(3); % metros
 
-    pub_index = 0;
-    pub_state = ["OFF", "ON"];
-
-    distance = 0;
     gripper_closed = 0.01; % metros
     gripper_opened = 0.0; % metros
     
     handles = guidata(hObject);
     axes = zeros(8,1);
     buttons = zeros(11,1);
+    precision = 0;
+    
     while handles.ModoDeOperacion.Value == 1 && handles.roson && handles.operando
         handles.Estado.String = 'prendido';
         try
@@ -607,6 +636,21 @@ function joystick(hObject,handles)
             rho_act = t_home(1)/cos(roll_aux);
             z_act = t_home(3);
             disp('Home position')
+        elseif buttons(3)==1 % Precision - X
+            precision = not(precision);
+            if precision == 1
+                step_rho = 0.001; % metros
+                step_z = 0.001; % metros
+                step_roll = deg2rad(0.5); % rad
+                step_pitch = deg2rad(0.5); % rad
+                disp('Modo precisión: ON')
+            else
+                step_rho = 0.01; % metros
+                step_z = 0.01; % metros
+                step_roll = deg2rad(5); % rad
+                step_pitch = deg2rad(5); % rad
+                disp('Modo precisión: OFF')
+            end
         end
 
         if abs(axes(2)) > js_deadzone 
@@ -626,19 +670,12 @@ function joystick(hObject,handles)
         end
 
         % Gripper ----------------------------------
-        if buttons(5) == 1 % RB
-            distance = distance + step_gripper;
-            if distance >= gripper_closed
-                distance = gripper_closed;
-            end
-            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance);
-        elseif buttons(6) == 1 % LB
-            distance = distance - step_gripper;
-            if distance <= gripper_opened
-                distance = gripper_opened;
-            end
-            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,distance);
+        if buttons(5) == 1 % LB
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper_opened);
+        elseif buttons(6) == 1 % LR
+            moveGripper(handles.pubFinger1,handles.msgFinger1,handles.pubFinger2,handles.msgFinger2,gripper_closed);
         end
+        
         
         t_act(1) = rho_act*cos(roll_aux);
         t_act(2) = rho_act*sin(roll_aux);
@@ -653,8 +690,10 @@ function joystick(hObject,handles)
 %         axes(handles.axes1)
         Q_act = handles.pincher.ikunc(T_new);
 %         Q_act = inverseX(T_new,handles.l);
-        handles.pincher.plot(Q_act,'noa','workspace', [-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
-
+        
+%         handles.pincher.plot(Q_act,'noa','workspace', [-0.4 0.4 -0.4 0.4 -0.1 0.65],'view',[60 30]);
+        movePincher(handles.pincher, Q_act, T_new, handles)
+        
         moveAllJoints(handles.pubJoint1,handles.msgJoint1,handles.pubJoint2,handles.msgJoint2,handles.pubJoint3,handles.msgJoint3,handles.pubJoint4,handles.msgJoint4,Q_act);    
         
         [~,t_act] = tr2rt(handles.pincher.fkine(Q_act));

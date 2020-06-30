@@ -10,7 +10,7 @@
 <xacro:property name="l2" value="0.107" />
 <xacro:property name="l3" value="0.107" />
 <xacro:property name="l4" value="0.0905" /> <!-- Agarre efectivo Gripper  -->
-<xacro:property name="offset_finger" value="0.03" />
+<xacro:property name="offset_finger" value="0.035" />
 
 <!-- Size of square 'camera' box -->
 <xacro:property name="camera_size" value="0.005" /> 
@@ -24,7 +24,56 @@
 </material>
 
 <!-- Mass and Inertia -->
-<xacro:property name="link_base_mass" value="0.33520"/>
+<!--<xacro:property name="link_base_mass" value="0.33520"/>-->
+<!--<xacro:property name="link_base_ixx" value="0.0"/>-->
+<!--<xacro:property name="link_base_ixy" value="0.0"/>-->
+<!--<xacro:property name="link_base_ixz" value="0.0"/>-->
+<!--<xacro:property name="link_base_iyy" value="0.0"/>-->
+<!--<xacro:property name="link_base_iyz" value="0.0"/>-->
+<!--<xacro:property name="link_base_izz" value="0.0"/>-->
+
+<!--<xacro:property name="link_1_mass" value="0.11748"/>-->
+<!--<xacro:property name="link_1_ixx" value="0.0"/>-->
+<!--<xacro:property name="link_1_ixy" value="0.0"/>-->
+<!--<xacro:property name="link_1_ixz" value="0.0"/>-->
+<!--<xacro:property name="link_1_iyy" value="0.0"/>-->
+<!--<xacro:property name="link_1_iyz" value="0.0"/>-->
+<!--<xacro:property name="link_1_izz" value="0.0"/>-->
+
+
+<!--<xacro:property name="link_2_mass" value="0.16239"/>-->
+<!--<xacro:property name="link_2_ixx" value="0.0"/>-->
+<!--<xacro:property name="link_2_ixy" value="0.0"/>-->
+<!--<xacro:property name="link_2_ixz" value="0.0"/>-->
+<!--<xacro:property name="link_2_iyy" value="0.0"/>-->
+<!--<xacro:property name="link_2_iyz" value="0.0"/>-->
+<!--<xacro:property name="link_2_izz" value="0.0"/>-->
+
+<!--<xacro:property name="link_3_mass" value="0.16239"/>-->
+<!--<xacro:property name="link_3_ixx" value="0.0"/>-->
+<!--<xacro:property name="link_3_ixy" value="0.0"/>-->
+<!--<xacro:property name="link_3_ixz" value="0.0"/>-->
+<!--<xacro:property name="link_3_iyy" value="0.0"/>-->
+<!--<xacro:property name="link_3_iyz" value="0.0"/>-->
+<!--<xacro:property name="link_3_izz" value="0.0"/>-->
+
+<!--<xacro:property name="link_4_mass" value="0.16012"/>-->
+<!--<xacro:property name="link_4_ixx" value="0.0"/>-->
+<!--<xacro:property name="link_4_ixy" value="0.0"/>-->
+<!--<xacro:property name="link_4_ixz" value="0.0"/>-->
+<!--<xacro:property name="link_4_iyy" value="0.0"/>-->
+<!--<xacro:property name="link_4_iyz" value="0.0"/>-->
+<!--<xacro:property name="link_4_izz" value="0.0"/>-->
+
+<!--<xacro:property name="finger_mass" value="0.01769"/>-->
+<!--<xacro:property name="finger_ixx" value="0.0"/>-->
+<!--<xacro:property name="finger_ixy" value="0.0"/>-->
+<!--<xacro:property name="finger_ixz" value="0.0"/>-->
+<!--<xacro:property name="finger_iyy" value="0.0"/>-->
+<!--<xacro:property name="finger_iyz" value="0.0"/>-->
+<!--<xacro:property name="finger_izz" value="0.0"/>-->
+
+<xacro:property name="link_base_mass" value="0.055"/>
 <xacro:property name="link_base_ixx" value="0.0"/>
 <xacro:property name="link_base_ixy" value="0.0"/>
 <xacro:property name="link_base_ixz" value="0.0"/>
@@ -32,7 +81,7 @@
 <xacro:property name="link_base_iyz" value="0.0"/>
 <xacro:property name="link_base_izz" value="0.0"/>
 
-<xacro:property name="link_1_mass" value="0.11748"/>
+<xacro:property name="link_1_mass" value="0.055"/>
 <xacro:property name="link_1_ixx" value="0.0"/>
 <xacro:property name="link_1_ixy" value="0.0"/>
 <xacro:property name="link_1_ixz" value="0.0"/>
@@ -40,8 +89,7 @@
 <xacro:property name="link_1_iyz" value="0.0"/>
 <xacro:property name="link_1_izz" value="0.0"/>
 
-
-<xacro:property name="link_2_mass" value="0.16239"/>
+<xacro:property name="link_2_mass" value="0.055"/>
 <xacro:property name="link_2_ixx" value="0.0"/>
 <xacro:property name="link_2_ixy" value="0.0"/>
 <xacro:property name="link_2_ixz" value="0.0"/>
@@ -49,7 +97,7 @@
 <xacro:property name="link_2_iyz" value="0.0"/>
 <xacro:property name="link_2_izz" value="0.0"/>
 
-<xacro:property name="link_3_mass" value="0.16239"/>
+<xacro:property name="link_3_mass" value="0.055"/>
 <xacro:property name="link_3_ixx" value="0.0"/>
 <xacro:property name="link_3_ixy" value="0.0"/>
 <xacro:property name="link_3_ixz" value="0.0"/>
@@ -57,7 +105,7 @@
 <xacro:property name="link_3_iyz" value="0.0"/>
 <xacro:property name="link_3_izz" value="0.0"/>
 
-<xacro:property name="link_4_mass" value="0.16012"/>
+<xacro:property name="link_4_mass" value="0.055"/>
 <xacro:property name="link_4_ixx" value="0.0"/>
 <xacro:property name="link_4_ixy" value="0.0"/>
 <xacro:property name="link_4_ixz" value="0.0"/>
@@ -65,13 +113,13 @@
 <xacro:property name="link_4_iyz" value="0.0"/>
 <xacro:property name="link_4_izz" value="0.0"/>
 
-<xacro:property name="finger_mass" value="0.01769"/>
-<xacro:property name="finger_ixx" value="0.0"/>
-<xacro:property name="finger_ixy" value="0.0"/>
-<xacro:property name="finger_ixz" value="0.0"/>
-<xacro:property name="finger_iyy" value="0.0"/>
-<xacro:property name="finger_iyz" value="0.0"/>
-<xacro:property name="finger_izz" value="0.0"/>
+<xacro:property name="finger_mass" value="0.006803850"/>
+<xacro:property name="finger_ixx" value="0.000001127"/>
+<xacro:property name="finger_ixy" value="0.000000000"/>
+<xacro:property name="finger_ixz" value="0.000000000"/>
+<xacro:property name="finger_iyy" value="0.000001776"/>
+<xacro:property name="finger_iyz" value="-0.000000278"/>
+<xacro:property name="finger_izz" value="0.000001162"/>
 
 <!-- Joint-Servomotor Position Limits -150,150 deg -->
 <xacro:property name="joint_lower" value="-2.61799" />
@@ -221,13 +269,13 @@ params="name origin_rpy origin_xyz inertial_xyz inertial_rpy  mass ixx ixy ixz i
             <geometry>
                 <box size="${camera_size} ${camera_size} ${camera_size}"/>
             </geometry>
-            <material name="red"/>
+            <material name="Black"/>
         </visual> 
        
         <inertial>
-            <mass value="0" />
+            <mass value="${mass}" />
             <origin rpy="${inertial_rpy}" xyz="${inertial_xyz}" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+            <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}" />
         </inertial>
 
         

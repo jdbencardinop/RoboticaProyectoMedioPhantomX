@@ -6,7 +6,6 @@
     <arg name="robot_xacro" default="phantomx_description.xacro"/>
     <arg name="caja_xacro" default="caja_description.xacro"/>
     <arg name="rosca_xacro" default="rosca_description.xacro"/>
-    <arg name="fixed_camera_xacro" default="fixed_camera.xacro"/>
     <arg name="control_file" default="phantomx_control.yaml"/>
     <!-- Origin XYZ-->
     <arg name="init_pose_robot" value="-x 0 -y 0 -z 0" />
@@ -14,12 +13,10 @@
     <!-- Radio=0.22m-->
     <!-- cos(pi/6)*R=0.19052-->
     <!-- sin(pi/6)*R=0.11-->
-    <arg name="init_pose_caja_1"  value="-x 0 -y 0.22 -z 0" />
     <arg name="init_pose_caja_2"  value="-x 0.19052 -y 0.11 -z 0" />
-    <arg name="init_pose_caja_3"  value="-x 0.19052 -y -0.11 -z 0" />
-    <arg name="init_pose_caja_4"  value="-x 0 -y -0.22 -z 0" />
+    <arg name="init_pose_caja_3"  value="-x 0.22 -y 0 -z 0" />
+    <arg name="init_pose_caja_4"  value="-x 0.19052 -y -0.11 -z 0" />
     <arg name="init_pose_rosca_1" value="-x 0 -y 0.22 -z 0.021" />
-<!--    <arg name="init_pose_fixed_cam_1" value="-x 0.22 -y 0 -z 0.5" />-->
 
 
     <!-- -|-|-|-|-|-|-|-|- SPAWNERS -|-|-|-|-|-|-|-|- -->
@@ -49,64 +46,40 @@
 <!--    <param name="fixed_camera_description" -->
 <!--           command="$(find xacro)/xacro.py $(find phantomx_pincher)/urdf/$(arg fixed_camera_xacro)"/>-->
 
-    <!-- Spawn Fixed Camera in Gazebo -->
-
-<!--    <node -->
-<!--        name="fixed_camera_1_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_fixed_cam_1) -->
-<!--              -urdf-->
-<!--              -model fixed_cam_1 -->
-<!--              -param fixed_camera_description"-->
-<!--        output="screen"-->
-<!--    />-->
-
     <!-- Spawn Cajas in Gazebo -->
 
-<!--    <node -->
-<!--        name="caja_1_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_caja_1) -->
-<!--              -urdf-->
-<!--              -model caja_1 -->
-<!--              -param caja_description"-->
-<!--        output="screen"-->
-<!--    />-->
+    <node 
+        name="caja_2_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model"
+        args="$(arg init_pose_caja_2) 
+              -urdf
+              -model caja_2 
+              -param caja_description"
+        output="screen"
+    />
 
-<!--    <node -->
-<!--        name="caja_2_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_caja_2) -->
-<!--              -urdf-->
-<!--              -model caja_2 -->
-<!--              -param caja_description"-->
-<!--        output="screen"-->
-<!--    />-->
+    <node 
+        name="caja_3_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model"
+        args="$(arg init_pose_caja_3) 
+              -urdf
+              -model caja_3 
+              -param caja_description"
+        output="screen"
+    />
 
-<!--    <node -->
-<!--        name="caja_3_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_caja_3) -->
-<!--              -urdf-->
-<!--              -model caja_3 -->
-<!--              -param caja_description"-->
-<!--        output="screen"-->
-<!--    />-->
-
-<!--    <node -->
-<!--        name="caja_4_spawner" -->
-<!--        pkg="gazebo_ros" -->
-<!--        type="spawn_model"-->
-<!--        args="$(arg init_pose_caja_4) -->
-<!--              -urdf-->
-<!--              -model caja_4 -->
-<!--              -param caja_description"-->
-<!--        output="screen"-->
-<!--    />-->
+    <node 
+        name="caja_4_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model"
+        args="$(arg init_pose_caja_4) 
+              -urdf
+              -model caja_4 
+              -param caja_description"
+        output="screen"
+    />
 
     <!-- Spawn Roscas in Gazebo -->
 
@@ -120,6 +93,8 @@
               -param rosca_description"
         output="screen"
     />
+
+ 
 
     <!-- -|-|-|-|-|-|-|-|- CONTROLLER -|-|-|-|-|-|-|-|- -->
 
@@ -143,8 +118,8 @@
     />
 
     <!-- -|-|-|-|-|-|-|-|- RQT -|-|-|-|-|-|-|-|- -->
-    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />
-    <node name="rqt_publisher" pkg="rqt_publisher" type="rqt_publisher" />
+<!--    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />-->
+<!--    <node name="rqt_publisher" pkg="rqt_publisher" type="rqt_publisher" />-->
 
   
 

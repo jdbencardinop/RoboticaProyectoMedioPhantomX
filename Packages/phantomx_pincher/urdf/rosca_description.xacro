@@ -13,7 +13,7 @@
     <visual>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} 0.013"/>
         </geometry>
     </visual> 
 
@@ -26,7 +26,7 @@
     <collision>
         <origin rpy="0 0 0" xyz="0 0 0" />
         <geometry>
-            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+            <mesh filename="package://phantomx_pincher/meshes/rosca.stl" scale="${M_SCALE} ${M_SCALE} 0.013"/>
         </geometry>
     </collision>
 

@@ -239,21 +239,21 @@
         <robotNamespace>/phantomx_pincher</robotNamespace>
     </plugin>
 
-<!--    <plugin name="gazebo_grasp_fix" filename="libgazebo_grasp_fix.so">-->
-<!--        <arm>-->
-<!--           <arm_name>phantomx_pincher</arm_name>-->
-<!--           <palm_link>link_4</palm_link>-->
-<!--           <gripper_link>link_finger_1</gripper_link>-->
-<!--           <gripper_link>link_finger_1</gripper_link>-->
-<!--        </arm>-->
-<!--       <forces_angle_tolerance>100</forces_angle_tolerance>-->
-<!--       <update_rate>5</update_rate>-->
-<!--       <grip_count_threshold>4</grip_count_threshold>-->
-<!--       <max_grip_count>8</max_grip_count>-->
-<!--       <release_tolerance>0.005</release_tolerance>-->
-<!--       <disable_collisions_on_attach>false</disable_collisions_on_attach>-->
-<!--       <contact_topic>__default_topic__</contact_topic>-->
-<!--    </plugin>-->
+    <plugin name="gazebo_grasp_fix" filename="libgazebo_grasp_fix.so">
+        <arm>
+           <arm_name>arm_pincher</arm_name>
+           <palm_link>link_4</palm_link>
+           <gripper_link>link_finger_1</gripper_link>
+           <gripper_link>link_finger_2</gripper_link>
+        </arm>
+       <forces_angle_tolerance>100</forces_angle_tolerance>
+       <update_rate>50</update_rate>
+       <grip_count_threshold>5</grip_count_threshold>
+       <max_grip_count>10</max_grip_count>
+       <release_tolerance>0.005</release_tolerance>
+       <disable_collisions_on_attach>false</disable_collisions_on_attach>
+       <contact_topic>__default_topic__</contact_topic>
+    </plugin>
 
 </gazebo>
 

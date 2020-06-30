@@ -144,7 +144,7 @@
     origin_rpy="0 0 0" 
     origin_xyz="${l4} 0 -${offset_finger}"
     axis_xyz="0 0 1"
-    limit_e="10" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.01" 
+    limit_e="10" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.001" 
 />
 
 <!-- Joint-Servomotor-Gripper 2 -->
@@ -156,34 +156,84 @@
     origin_rpy="${M_PI} 0 0" 
     origin_xyz="${l4} 0 ${offset_finger}"
     axis_xyz="0 0 1"
-    limit_e="10" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.01" 
+    limit_e="10" limit_l="0" limit_u="${joint_gripper_limit}" limit_v="0.001" 
 />
 
 <!-- Link-Gripper Finger 1 -->
-<link_phantomx
-    name="link_finger_1"
-    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
-    origin_xyz="-0.019 0 0"
-    inertial_rpy="${M_PI/2} 0 ${M_PI/2}" 
-    inertial_xyz="0.006186000 0 0.011269000"
-    meshfile="package://phantomx_pincher/meshes/finger.dae"
-    mass="${finger_mass}"
-    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"
-    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	
-/> 
+<!--<link_phantomx-->
+<!--    name="link_finger_1"-->
+<!--    origin_rpy="${M_PI/2} 0 ${M_PI/2}" -->
+<!--    origin_xyz="-0.019 0 0"-->
+<!--    inertial_rpy="${M_PI/2} 0 ${M_PI/2}" -->
+<!--    inertial_xyz="0.006186000 0 0.011269000"-->
+<!--    meshfile="package://phantomx_pincher/meshes/finger.dae"-->
+<!--    mass="${finger_mass}"-->
+<!--    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"-->
+<!--    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	-->
+<!--/> -->
 
 <!-- Link-Gripper Finger 2 -->
-<link_phantomx
-    name="link_finger_2"
-    origin_rpy="${M_PI/2} 0 ${M_PI/2}" 
-    origin_xyz="-0.019 0 0"
-    inertial_rpy="${M_PI/2} 0 ${M_PI/2}" 
-    inertial_xyz="0.006186000 0 0.011269000"
-    meshfile="package://phantomx_pincher/meshes/finger.dae"
-    mass="${finger_mass}"
-    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"
-    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	
-/> 
+<!--<link_phantomx-->
+<!--    name="link_finger_2"-->
+<!--    origin_rpy="${M_PI/2} 0 ${M_PI/2}" -->
+<!--    origin_xyz="-0.019 0 0"-->
+<!--    inertial_rpy="${M_PI/2} 0 ${M_PI/2}" -->
+<!--    inertial_xyz="0.006186000 0 0.011269000"-->
+<!--    meshfile="package://phantomx_pincher/meshes/finger.dae"-->
+<!--    mass="${finger_mass}"-->
+<!--    ixx="${finger_ixx}" ixy="${finger_ixy}" ixz="${finger_ixz}"-->
+<!--    iyy="${finger_iyy}" iyz="${finger_iyz}" izz="${finger_izz}"	-->
+<!--/> -->
+
+<link name="link_finger_1">
+
+        <visual>
+            <origin rpy="${M_PI/2-0.1} 0 ${M_PI/2}" xyz="-0.019 0 0" />
+            <geometry>
+                <mesh filename="package://phantomx_pincher/meshes/finger.dae"/>
+            </geometry>
+            <material name="Black"/>
+        </visual> 
+       
+        <inertial>
+            <mass value="${finger_mass}" />
+            <origin rpy="${M_PI/2} 0 ${M_PI/2}" xyz="0.006186000 0 0.011269000" />
+            <inertia ixx="${0}" ixy="${0}" ixz="${0}" iyy="${0}" iyz="${0}" izz="${0}" />
+        </inertial>
+
+        <collision>
+            <origin rpy="${M_PI/2-0.1} 0 ${M_PI/2}" xyz="-0.019 0 0" />
+            <geometry>
+                <mesh filename="package://phantomx_pincher/meshes/finger.dae"/>
+            </geometry>
+        </collision>
+
+    </link>
+
+ <link name="link_finger_2">
+
+        <visual>
+            <origin rpy="${M_PI/2-0.1} 0 ${M_PI/2}" xyz="-0.019 0 0" />
+            <geometry>
+                <mesh filename="package://phantomx_pincher/meshes/finger.dae"/>
+            </geometry>
+            <material name="Black"/>
+        </visual> 
+       
+        <inertial>
+            <mass value="${finger_mass}" />
+            <origin rpy="${M_PI/2} 0 ${M_PI/2}" xyz="0.006186000 0 0.011269000" />
+            <inertia ixx="${0}" ixy="${0}" ixz="${0}" iyy="${0}" iyz="${0}" izz="${0}" />
+        </inertial>
+
+        <collision>
+            <origin rpy="${M_PI/2-0.1} 0 ${M_PI/2}" xyz="-0.019 0 0" />
+            <geometry>
+                <mesh filename="package://phantomx_pincher/meshes/finger.dae"/>
+            </geometry>
+        </collision>
+
+    </link>
 
 
 <!-- Joint-Gripper-Camera-->
@@ -192,8 +242,8 @@
     type="fixed"
     parent="link_4"
     child="link_gripper_camera"
-    origin_rpy="0 0 0" 
-    origin_xyz="${l4-0.015} 0 0"
+    origin_rpy="${M_PI/2} 0 ${M_PI/6}" 
+    origin_xyz="${l4-0.02} -0.02 0"
     axis_xyz="0 0 1" 
 />
 
@@ -204,33 +254,34 @@
     origin_xyz="0 0 0"
     inertial_rpy="0 0 0" 
     inertial_xyz="${camera_size/2} 0 0"
+    mass="0"
+    ixx="0" ixy="0" ixz="0"
+    iyy="0" iyz="0" izz="0"
+/> 
+
+<!-- Joint-Fixed-Camera-->
+<joint_camera
+    name="joint_camera_1" 
+    type="fixed"
+    parent="world"
+    child="link_fixed_camera"
+    origin_rpy="0 -${M_PI/8} ${M_PI}" 
+    origin_xyz="0.4 0 0"
+    axis_xyz="1 0 0" 
+
+/>
+
+<!-- Link-Fixed-Camera-->
+<link_camera
+    name="link_fixed_camera"
+    origin_rpy="0 0 0" 
+    origin_xyz="0 0 0"
+    inertial_rpy="0 0 0" 
+    inertial_xyz="${camera_size/2} 0 0"
     mass="${camera_mass}"
     ixx="${camera_ixx}" ixy="${camera_ixy}" ixz="${camera_ixz}"
     iyy="${camera_iyy}" iyz="${camera_iyz}" izz="${camera_izz}"
 /> 
-
-<!-- Joint-Fixed-Camera-->
-<!--<joint_camera-->
-<!--    name="joint_camera_1" -->
-<!--    type="fixed"-->
-<!--    parent="world"-->
-<!--    child="link_fixed_camera"-->
-<!--    origin_rpy="0 0 ${8*M_PI/6}" -->
-<!--    origin_xyz="0.4 0.4 0"-->
-<!--    axis_xyz="1 0 0" -->
-<!--/>-->
-
-<!-- Link-Fixed-Camera-->
-<!--<link_camera-->
-<!--    name="link_fixed_camera"-->
-<!--    origin_rpy="0 0 0" -->
-<!--    origin_xyz="0 0 0"-->
-<!--    inertial_rpy="0 0 0" -->
-<!--    inertial_xyz="${camera_size/2} 0 0"-->
-<!--    mass="${camera_mass}"-->
-<!--    ixx="${camera_ixx}" ixy="${camera_ixy}" ixz="${camera_ixz}"-->
-<!--    iyy="${camera_iyy}" iyz="${camera_iyz}" izz="${camera_izz}"-->
-<!--/> -->
 
 <!-- -|-|-|-|-|-|-|-|- GAZEBO PLUGIN -|-|-|-|-|-|-|-|- -->
 
@@ -244,14 +295,14 @@
            <arm_name>arm_pincher</arm_name>
            <palm_link>link_4</palm_link>
            <gripper_link>link_finger_1</gripper_link>
-           <gripper_link>link_finger_1</gripper_link>
+           <gripper_link>link_finger_2</gripper_link>
         </arm>
        <forces_angle_tolerance>100</forces_angle_tolerance>
-       <update_rate>100</update_rate>
-       <grip_count_threshold>5</grip_count_threshold>
-       <max_grip_count>10</max_grip_count>
-       <release_tolerance>0.005</release_tolerance>
-       <disable_collisions_on_attach>true</disable_collisions_on_attach>
+       <update_rate>20</update_rate>
+       <grip_count_threshold>20</grip_count_threshold>
+       <max_grip_count>40</max_grip_count>
+       <release_tolerance>0.003</release_tolerance>
+       <disable_collisions_on_attach>false</disable_collisions_on_attach>
        <contact_topic>__default_topic__</contact_topic>
     </plugin>
 
@@ -263,8 +314,8 @@
   <camera name="head">
     <horizontal_fov>1.3962634</horizontal_fov>
     <image>
-      <width>800</width>
-      <height>800</height>
+      <width>250</width>
+      <height>250</height>
       <format>R8G8B8</format>
     </image>
     <clip>
@@ -294,42 +345,42 @@
 </sensor>
 </gazebo>
 
-<!--<gazebo reference="link_fixed_camera">-->
-<!--<sensor type="camera" name="camera_1">-->
-<!--  <update_rate>5</update_rate>-->
-<!--  <camera name="head">-->
-<!--    <horizontal_fov>1.3962634</horizontal_fov>-->
-<!--    <image>-->
-<!--      <width>800</width>-->
-<!--      <height>800</height>-->
-<!--      <format>R8G8B8</format>-->
-<!--    </image>-->
-<!--    <clip>-->
-<!--      <near>0.02</near>-->
-<!--      <far>300</far>-->
-<!--    </clip>-->
-<!--    <noise>-->
-<!--      <type>gaussian</type>-->
-<!--      <mean>0.0</mean>-->
-<!--      <stddev>0.007</stddev>-->
-<!--    </noise>-->
-<!--  </camera>-->
-<!--  <plugin name="camera_controller" filename="libgazebo_ros_camera.so">-->
-<!--    <alwaysOn>true</alwaysOn>-->
-<!--    <updateRate>0.0</updateRate>-->
-<!--    <cameraName>camera_1</cameraName>-->
-<!--    <imageTopicName>image_raw</imageTopicName>-->
-<!--    <cameraInfoTopicName>camera_info</cameraInfoTopicName>-->
-<!--    <frameName>camera_link</frameName>-->
-<!--    <hackBaseline>0.07</hackBaseline>-->
-<!--    <distortionK1>0.0</distortionK1>-->
-<!--    <distortionK2>0.0</distortionK2>-->
-<!--    <distortionK3>0.0</distortionK3>-->
-<!--    <distortionT1>0.0</distortionT1>-->
-<!--    <distortionT2>0.0</distortionT2>-->
-<!--  </plugin>-->
-<!--</sensor>-->
-<!--</gazebo>-->
+<gazebo reference="link_fixed_camera">
+<sensor type="camera" name="camera_1">
+  <update_rate>5</update_rate>
+  <camera name="head">
+    <horizontal_fov>1.3962634</horizontal_fov>
+    <image>
+      <width>250</width>
+      <height>250</height>
+      <format>R8G8B8</format>
+    </image>
+    <clip>
+      <near>0.02</near>
+      <far>300</far>
+    </clip>
+    <noise>
+      <type>gaussian</type>
+      <mean>0.0</mean>
+      <stddev>0.007</stddev>
+    </noise>
+  </camera>
+  <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+    <alwaysOn>true</alwaysOn>
+    <updateRate>0.0</updateRate>
+    <cameraName>camera_1</cameraName>
+    <imageTopicName>image_raw</imageTopicName>
+    <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+    <frameName>camera_link</frameName>
+    <hackBaseline>0.07</hackBaseline>
+    <distortionK1>0.0</distortionK1>
+    <distortionK2>0.0</distortionK2>
+    <distortionK3>0.0</distortionK3>
+    <distortionT1>0.0</distortionT1>
+    <distortionT2>0.0</distortionT2>
+  </plugin>
+</sensor>
+</gazebo>
 
 
 </robot>
